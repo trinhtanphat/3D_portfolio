@@ -1,0 +1,29 @@
+name: go-backend-api-ci
+
+on:
+  push:
+    paths:
+      - "projects/go-backend-api/**"
+      - ".github/workflows/go-backend-api-ci.yml"
+  pull_request:
+    paths:
+      - "projects/go-backend-api/**"
+      - ".github/workflows/go-backend-api-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/go-backend-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: false
+      - run: go mod tidy
+      - run: gofmt -l ./cmd ./internal | tee /tmp/gofmt.out && test ! -s /tmp/gofmt.out
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: docker build -t go-backend-api:ci .
